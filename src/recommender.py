@@ -38,13 +38,36 @@ class Recommender:
     def __init__(self, songs: List[Song]):
         self.songs = songs
 
+    def _score(self, user: UserProfile, song: Song) -> Tuple[float, List[str]]:
+        """Scores one Song against a UserProfile using the same weighted recipe as score_song."""
+        score = 0.0
+        reasons = []
+
+        if user.favorite_genre == song.genre:
+            score += 2.0
+            reasons.append("genre match (+2.0)")
+
+        if user.favorite_mood == song.mood:
+            score += 1.0
+            reasons.append("mood match (+1.0)")
+
+        energy_points = 1.0 * (1 - abs(song.energy - user.target_energy))
+        score += energy_points
+        reasons.append(f"energy closeness (+{energy_points:.2f})")
+
+        if user.likes_acoustic and song.acousticness > 0.6:
+            score += 0.5
+            reasons.append("acoustic bonus (+0.5)")
+
+        return score, reasons
+
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
-        # TODO: Implement recommendation logic
-        return self.songs[:k]
+        ranked = sorted(self.songs, key=lambda song: self._score(user, song)[0], reverse=True)
+        return ranked[:k]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
-        # TODO: Implement explanation logic
-        return "Explanation placeholder"
+        _, reasons = self._score(user, song)
+        return ", ".join(reasons) if reasons else "no strong matches"
 
 def load_songs(csv_path: str) -> List[Dict]:
     """Reads songs.csv into a list of dicts, converting numeric fields to float/int."""
