@@ -62,10 +62,12 @@ class Recommender:
         return score, reasons
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
+        """Scores every song against the user, then returns the top k highest-scoring songs."""
         ranked = sorted(self.songs, key=lambda song: self._score(user, song)[0], reverse=True)
         return ranked[:k]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
+        """Returns a human-readable, comma-separated list of the reasons this song scored what it did."""
         _, reasons = self._score(user, song)
         return ", ".join(reasons) if reasons else "no strong matches"
 
